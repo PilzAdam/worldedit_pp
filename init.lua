@@ -118,6 +118,43 @@ minetest.register_globalstep(function(dtime)
 			wpp.data[playername].status = ""
 			wpp.data[playername].p = nil
 			table.remove(wpp.run_player, 1)
+		elseif wpp.data[playername].action == "fixlight" then
+			if not wpp.data[playername].p then
+				wpp.data[playername].p = {x=minp.x, y=minp.y, z=minp.z}
+			end
+			
+			local i = 0
+			while
+				wpp.data[playername].p.x ~= maxp.x or
+				wpp.data[playername].p.y ~= maxp.y or
+				wpp.data[playername].p.z ~= maxp.z
+			do
+				if i % 2 == 0 and minetest.env:get_node(wpp.data[playername].p).name == "air" then
+					minetest.env:dig_node(wpp.data[playername].p)
+				end
+				
+				wpp.data[playername].p.z = wpp.data[playername].p.z+1
+				if wpp.data[playername].p.z > maxp.z then
+					wpp.data[playername].p.z = minp.z
+					wpp.data[playername].p.y = wpp.data[playername].p.y+1
+					if wpp.data[playername].p.y > maxp.y then
+						wpp.data[playername].p.y = minp.y
+						wpp.data[playername].p.x = wpp.data[playername].p.x+1
+						if wpp.data[playername].p.x > maxp.x then
+							break
+						end
+					end
+				end
+				
+				i = i+1
+				if i >= NODES_PER_STEP then
+					return
+				end
+			end
+			send_player(playername, "Command \"fixlight\" finished")
+			wpp.data[playername].status = ""
+			wpp.data[playername].p = nil
+			table.remove(wpp.run_player, 1)
 		else
 			wpp.data[playername].status = ""
 			send_player(playername, "Error occured: Unknonw action")
@@ -312,6 +349,29 @@ minetest.register_chatcommand("replace", {
 		wpp.data[playername].status = "waiting"
 		table.insert(wpp.run_player, playername)
 		send_player(playername, "Command \"replace\" enqueued")
+	end,
+})
+
+minetest.register_chatcommand("fixlight", {
+	params = "<none>",
+	description = "Fixes the light",
+	privs = {worldedit = true},
+	func = function(playername, param)
+		init_player(playername)
+		if check_running(playername) then return end
+		
+		if not wpp.data[playername].p1 then
+			send_player(playername, "No position 1 set. Please set one with /p1")
+			return
+		end
+		if not wpp.data[playername].p2 then
+			send_player(playername, "No position 2 set. Please set one with /p2")
+			return
+		end
+		wpp.data[playername].action = "fixlight"
+		wpp.data[playername].status = "waiting"
+		table.insert(wpp.run_player, playername)
+		send_player(playername, "Command \"fixlight\" enqueued")
 	end,
 })
 

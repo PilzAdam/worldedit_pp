@@ -6,6 +6,8 @@ Descripton
 ----------
 Worldedit++ adds commands to Minetest to easily set thousands of nodes. Most of
 them require the "worldedit" privilege.
+The commands are executed step by step, wich means that the server does not lag
+at all if a Worldedit++ command is running. It still 100% playable.
 If a player starts a command it gets enqueued into the serverqueue, and it will
 be started if the commands in front of it are executed. This makes it easy to
 use on multiplayer servers.
@@ -44,6 +46,11 @@ Currently supported commands are:
    - parameter: nodename
    - replaces the given node with the selected node in the region specified by
      position 1 & 2
+ - fixlight
+   - no parameters
+   - fixes light in the region specified by position 1 & 2 by digging air in it
+   - NOTE: this might cause lag and take longer than the ETA printed at the
+           start
 
 License
 -------
