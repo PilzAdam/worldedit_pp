@@ -9,6 +9,7 @@ wpp.data = {}
 --     - action
 --     - status ("wating", "running", "paused", "")
 --     - p
+--     - replace
 
 local NODES_PER_STEP = 255
 
@@ -36,16 +37,16 @@ minetest.register_globalstep(function(dtime)
 			table.remove(wpp.run_player, 1)
 		end
 		
+		local minp, maxp = minmaxp(wpp.data[playername].p1, wpp.data[playername].p2)
+		
+		if wpp.data[playername].status ~= "running" then
+			local eta = (maxp.x-minp.x)*(maxp.y-minp.y)*(maxp.z-minp.z)/NODES_PER_STEP * wpp.dtime
+			eta = math.floor(eta)
+			send_player(playername, "Starting your command \""..wpp.data[playername].action.."\"; ETA: "..eta.." seconds (based on average server speed)")
+			wpp.data[playername].status = "running"
+		end
+		
 		if wpp.data[playername].action == "set" then
-			local minp, maxp = minmaxp(wpp.data[playername].p1, wpp.data[playername].p2)
-			
-			if wpp.data[playername].status ~= "running" then
-				local eta = (maxp.x-minp.x)*(maxp.y-minp.y)*(maxp.z-minp.z)/NODES_PER_STEP * wpp.dtime
-				eta = math.floor(eta)
-				send_player(playername, "Starting your command; ETA: "..eta.." seconds (based on average server speed)")
-				wpp.data[playername].status = "running"
-			end
-			
 			if not wpp.data[playername].p then
 				wpp.data[playername].p = {x=minp.x, y=minp.y, z=minp.z}
 			end
@@ -76,7 +77,44 @@ minetest.register_globalstep(function(dtime)
 					return
 				end
 			end
-			send_player(playername, "Command finished")
+			send_player(playername, "Command \"set\" finished")
+			wpp.data[playername].status = ""
+			wpp.data[playername].p = nil
+			table.remove(wpp.run_player, 1)
+		elseif wpp.data[playername].action == "replace" then
+			if not wpp.data[playername].p then
+				wpp.data[playername].p = {x=minp.x, y=minp.y, z=minp.z}
+			end
+			
+			local i = 0
+			while
+				wpp.data[playername].p.x ~= maxp.x or
+				wpp.data[playername].p.y ~= maxp.y or
+				wpp.data[playername].p.z ~= maxp.z
+			do
+				if minetest.env:get_node(wpp.data[playername].p).name == wpp.data[playername].replace then
+					minetest.env:set_node(wpp.data[playername].p, {name=wpp.data[playername].node})
+				end
+				
+				wpp.data[playername].p.z = wpp.data[playername].p.z+1
+				if wpp.data[playername].p.z > maxp.z then
+					wpp.data[playername].p.z = minp.z
+					wpp.data[playername].p.y = wpp.data[playername].p.y+1
+					if wpp.data[playername].p.y > maxp.y then
+						wpp.data[playername].p.y = minp.y
+						wpp.data[playername].p.x = wpp.data[playername].p.x+1
+						if wpp.data[playername].p.x > maxp.x then
+							break
+						end
+					end
+				end
+				
+				i = i+1
+				if i >= NODES_PER_STEP then
+					return
+				end
+			end
+			send_player(playername, "Command \"replace\" finished")
 			wpp.data[playername].status = ""
 			wpp.data[playername].p = nil
 			table.remove(wpp.run_player, 1)
@@ -241,7 +279,39 @@ minetest.register_chatcommand("set", {
 		wpp.data[playername].action = "set"
 		wpp.data[playername].status = "waiting"
 		table.insert(wpp.run_player, playername)
-		send_player(playername, "Command enqueued")
+		send_player(playername, "Command \"set\" enqueued")
+	end,
+})
+
+minetest.register_chatcommand("replace", {
+	params = "<nodename>",
+	description = "Replaces node with selected node",
+	privs = {worldedit = true},
+	func = function(playername, param)
+		init_player(playername)
+		if check_running(playername) then return end
+		
+		if not wpp.data[playername].node then
+			send_player(playername, "No node selected. Please select one with /select")
+			return
+		end
+		if not wpp.data[playername].p1 then
+			send_player(playername, "No position 1 set. Please set one with /p1")
+			return
+		end
+		if not wpp.data[playername].p2 then
+			send_player(playername, "No position 2 set. Please set one with /p2")
+			return
+		end
+		if not minetest.registered_nodes[param] then
+			send_player(playername, "Unknonwn node: "..param)
+			return
+		end
+		wpp.data[playername].replace = param
+		wpp.data[playername].action = "replace"
+		wpp.data[playername].status = "waiting"
+		table.insert(wpp.run_player, playername)
+		send_player(playername, "Command \"replace\" enqueued")
 	end,
 })
 

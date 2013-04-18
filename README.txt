@@ -40,6 +40,10 @@ Currently supported commands are:
  - continue
    - no parameters
    - continues the paused command of the player
+ - replace
+   - parameter: nodename
+   - replaces the given node with the selected node in the region specified by
+     position 1 & 2
 
 License
 -------
