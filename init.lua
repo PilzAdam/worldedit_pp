@@ -11,7 +11,7 @@ wpp.data = {}
 --     - p
 --     - replace
 
-local NODES_PER_STEP = 255
+local NODES_PER_STEP = 512
 
 local function minmaxp(p1, p2)
 	return 
@@ -321,7 +321,7 @@ minetest.register_chatcommand("set", {
 })
 
 minetest.register_chatcommand("replace", {
-	params = "<nodename>",
+	params = "<none> | <nodename>",
 	description = "Replaces node with selected node",
 	privs = {worldedit = true},
 	func = function(playername, param)
@@ -340,11 +340,19 @@ minetest.register_chatcommand("replace", {
 			send_player(playername, "No position 2 set. Please set one with /p2")
 			return
 		end
-		if not minetest.registered_nodes[param] then
-			send_player(playername, "Unknonwn node: "..param)
+		if param ~= "" then
+			if not minetest.registered_nodes[param] then
+				send_player(playername, "Unknonwn node: "..param)
+				return
+			end
+			wpp.data[playername].replace = param
+		else
+			wpp.data[playername].replace = minetest.env:get_player_by_name(playername):get_wielded_item():get_name()
+		end
+		if wpp.data[playername].replace == wpp.data[playername].node then
+			send_player(playername, "Nodes don't differ")
 			return
 		end
-		wpp.data[playername].replace = param
 		wpp.data[playername].action = "replace"
 		wpp.data[playername].status = "waiting"
 		table.insert(wpp.run_player, playername)
