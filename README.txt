@@ -14,30 +14,32 @@ use on multiplayer servers.
 Every player can only have one command at the same time, wich is either running,
 waiting or paused. Position 1 & 2 and the selected are also saved per player.
 Currently supported commands are:
- - /wpp:
+ - /wpp
     - no parameters
     - prints information about positions, nodes and commands
       of the player
- - /p1:
+ - /p1
     - optional parameter: <X>,<Y>,<Z>
     - sets position 1 for the player to the player position or x,y,z if
       specified
- - /p2:
+ - /p2
     - optional parameter: <X>,<Y>,<Z>
     - sets position 2 for the player to the player position or x,y,z if
       specified
- - /p1a:
+ - /p1a
     - parameter: <X>,<Y>,<Z>
     - adds given vector to position 1
- - /p2a:
+ - /p2a
     - parameter: <X>,<Y>,<Z>
     - adds given vector to position 2
- - /p1p:
+ - /p1p
     - no parameters
     - sets position 1 to the next punched node by the player
- - /p2p:
+    - call it again if you don't want to change it anymore
+ - /p2p
     - no parameters
     - sets position 2 to the next punched node by the player
+    - call it again if you don't want to change it anymore
  - /select
     - optional param: nodename
     - sets the node for the player
@@ -65,7 +67,12 @@ Currently supported commands are:
    - no parameters
    - fixes light in the region specified by position 1 & 2 by digging air in it
    - NOTE: this might cause lag and take longer than the ETA printed at the
-           start
+           beginning
+ - /dig
+   - no parameters
+   - digs nodes in region specified by position 1 & 2
+   - NOTE: this might cause lag and take longer than the ETA printed at the
+           beginning
 
 License
 -------

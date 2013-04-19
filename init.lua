@@ -86,6 +86,42 @@ minetest.register_globalstep(function(dtime)
 			wpp.data[playername].status = ""
 			wpp.data[playername].p = nil
 			table.remove(wpp.run_player, 1)
+		elseif wpp.data[playername].action == "dig" then
+			if not wpp.data[playername].p then
+				wpp.data[playername].p = {x=minp.x, y=minp.y, z=minp.z}
+			end
+			
+			local i = 0
+			while
+				wpp.data[playername].p.x ~= maxp.x or
+				wpp.data[playername].p.y ~= maxp.y or
+				wpp.data[playername].p.z ~= maxp.z
+			do
+				minetest.env:dig_node(wpp.data[playername].p)
+				
+				wpp.data[playername].p.z = wpp.data[playername].p.z+1
+				if wpp.data[playername].p.z > maxp.z then
+					wpp.data[playername].p.z = minp.z
+					wpp.data[playername].p.y = wpp.data[playername].p.y+1
+					if wpp.data[playername].p.y > maxp.y then
+						wpp.data[playername].p.y = minp.y
+						wpp.data[playername].p.x = wpp.data[playername].p.x+1
+						if wpp.data[playername].p.x > maxp.x then
+							break
+						end
+					end
+				end
+				
+				i = i+1
+				if i >= NODES_PER_STEP then
+					return
+				end
+			end
+			minetest.env:dig_node(wpp.data[playername].p)
+			send_player(playername, "Command \"dig\" finished")
+			wpp.data[playername].status = ""
+			wpp.data[playername].p = nil
+			table.remove(wpp.run_player, 1)
 		elseif wpp.data[playername].action == "replace" then
 			if not wpp.data[playername].p then
 				wpp.data[playername].p = {x=minp.x, y=minp.y, z=minp.z}
@@ -397,8 +433,13 @@ minetest.register_chatcommand("p1p", {
 		init_player(playername)
 		if check_running(playername) then return end
 		
-		wpp.data[playername].punch_1 = true
-		send_player(playername, "Position 1 will be set to next punched node")
+		if wpp.data[playername].punch_1 then
+			wpp.data[playername].punch_1 = false
+			send_player(playername, "Position 1 will not be set to next punched node")
+		else
+			wpp.data[playername].punch_1 = true
+			send_player(playername, "Position 1 will be set to next punched node")
+		end
 	end,
 })
 
@@ -410,8 +451,13 @@ minetest.register_chatcommand("p2p", {
 		init_player(playername)
 		if check_running(playername) then return end
 		
-		wpp.data[playername].punch_2 = true
-		send_player(playername, "Position 2 will be set to next punched node")
+		if wpp.data[playername].punch_2 then
+			wpp.data[playername].punch_2 = false
+			send_player(playername, "Position 2 will not be set to next punched node")
+		else
+			wpp.data[playername].punch_2 = true
+			send_player(playername, "Position 2 will be set to next punched node")
+		end
 	end,
 })
 
@@ -489,6 +535,29 @@ minetest.register_chatcommand("set", {
 		wpp.data[playername].status = "waiting"
 		table.insert(wpp.run_player, playername)
 		send_player(playername, "Command \"set\" enqueued")
+	end,
+})
+
+minetest.register_chatcommand("dig", {
+	params = "<none>",
+	description = "Digs nodes in area",
+	privs = {worldedit = true},
+	func = function(playername, param)
+		init_player(playername)
+		if check_running(playername) then return end
+		
+		if not wpp.data[playername].p1 then
+			send_player(playername, "Position 1 not set")
+			return
+		end
+		if not wpp.data[playername].p2 then
+			send_player(playername, "Position 2 not set")
+			return
+		end
+		wpp.data[playername].action = "dig"
+		wpp.data[playername].status = "waiting"
+		table.insert(wpp.run_player, playername)
+		send_player(playername, "Command \"dig\" enqueued")
 	end,
 })
 
