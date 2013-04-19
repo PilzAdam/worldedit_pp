@@ -15,6 +15,8 @@ wpp.data = {}
 --     - p1object
 --     - p2object
 --     - marker
+--     - nodes
+--     - unkown
 
 local NODES_PER_STEP = 512
 local NODES_PER_STEP_SLOW = 256
@@ -43,16 +45,14 @@ minetest.register_globalstep(function(dtime)
 			table.remove(wpp.run_player, 1)
 		end
 		
-		local minp, maxp = minmaxp(wpp.data[playername].p1, wpp.data[playername].p2)
-		
-		if wpp.data[playername].status ~= "running" then
-			local eta = (maxp.x-minp.x)*(maxp.y-minp.y)*(maxp.z-minp.z)/NODES_PER_STEP * wpp.dtime
-			eta = math.floor(eta)
-			send_player(playername, "Starting your command \""..wpp.data[playername].action.."\"; ETA: "..eta.." seconds (based on average server speed)")
-			wpp.data[playername].status = "running"
-		end
-		
-		if wpp.data[playername].action == "set" then
+		if wpp.data[playername].action == "setarea" then
+			local minp, maxp = minmaxp(wpp.data[playername].p1, wpp.data[playername].p2)
+			if wpp.data[playername].status ~= "running" then
+				local eta = (maxp.x-minp.x)*(maxp.y-minp.y)*(maxp.z-minp.z)/NODES_PER_STEP * wpp.dtime
+				eta = math.floor(eta)
+				send_player(playername, "Starting your command \"setarea\"; ETA: "..eta.." seconds (based on average server speed)")
+				wpp.data[playername].status = "running"
+			end
 			if not wpp.data[playername].p then
 				wpp.data[playername].p = {x=minp.x, y=minp.y, z=minp.z}
 			end
@@ -89,6 +89,13 @@ minetest.register_globalstep(function(dtime)
 			wpp.data[playername].p = nil
 			table.remove(wpp.run_player, 1)
 		elseif wpp.data[playername].action == "dig" then
+			local minp, maxp = minmaxp(wpp.data[playername].p1, wpp.data[playername].p2)
+			if wpp.data[playername].status ~= "running" then
+				local eta = (maxp.x-minp.x)*(maxp.y-minp.y)*(maxp.z-minp.z)/NODES_PER_STEP_SLOW * wpp.dtime
+				eta = math.floor(eta)
+				send_player(playername, "Starting your command \"dig\"; ETA: "..eta.." seconds (based on average server speed)")
+				wpp.data[playername].status = "running"
+			end
 			if not wpp.data[playername].p then
 				wpp.data[playername].p = {x=minp.x, y=minp.y, z=minp.z}
 			end
@@ -125,6 +132,13 @@ minetest.register_globalstep(function(dtime)
 			wpp.data[playername].p = nil
 			table.remove(wpp.run_player, 1)
 		elseif wpp.data[playername].action == "replace" then
+			local minp, maxp = minmaxp(wpp.data[playername].p1, wpp.data[playername].p2)
+			if wpp.data[playername].status ~= "running" then
+				local eta = (maxp.x-minp.x)*(maxp.y-minp.y)*(maxp.z-minp.z)/NODES_PER_STEP * wpp.dtime
+				eta = math.floor(eta)
+				send_player(playername, "Starting your command \"replace\"; ETA: "..eta.." seconds (based on average server speed)")
+				wpp.data[playername].status = "running"
+			end
 			if not wpp.data[playername].p then
 				wpp.data[playername].p = {x=minp.x, y=minp.y, z=minp.z}
 			end
@@ -165,6 +179,13 @@ minetest.register_globalstep(function(dtime)
 			wpp.data[playername].p = nil
 			table.remove(wpp.run_player, 1)
 		elseif wpp.data[playername].action == "fixlight" then
+			local minp, maxp = minmaxp(wpp.data[playername].p1, wpp.data[playername].p2)
+			if wpp.data[playername].status ~= "running" then
+				local eta = (maxp.x-minp.x)*(maxp.y-minp.y)*(maxp.z-minp.z)/NODES_PER_STEP_SLOW * wpp.dtime
+				eta = math.floor(eta)
+				send_player(playername, "Starting your command \"replace\"; ETA: "..eta.." seconds (based on average server speed)")
+				wpp.data[playername].status = "running"
+			end
 			if not wpp.data[playername].p then
 				wpp.data[playername].p = {x=minp.x, y=minp.y, z=minp.z}
 			end
@@ -197,10 +218,50 @@ minetest.register_globalstep(function(dtime)
 					return
 				end
 			end
-			if math.random(1,2) == 1 and minetest.env:get_node(wpp.data[playername].p).name == "air" then
+			if minetest.env:get_node(wpp.data[playername].p).name == "air" then
 				minetest.env:dig_node(wpp.data[playername].p)
 			end
 			send_player(playername, "Command \"fixlight\" finished")
+			wpp.data[playername].status = ""
+			wpp.data[playername].p = nil
+			table.remove(wpp.run_player, 1)
+		elseif wpp.data[playername].action == "load" then
+			if wpp.data[playername].status ~= "running" then
+				send_player(playername, "Starting your command \"load\"")
+				wpp.data[playername].status = "running"
+			end
+			if not wpp.data[playername].p then
+				wpp.data[playername].p = 1
+			end
+			
+			local i = 0
+			while wpp.data[playername].p <= #wpp.data[playername].nodes do
+				local current = wpp.data[playername].nodes[wpp.data[playername].p]
+				current.x = current.x + wpp.data[playername].p1.x
+				current.y = current.y + wpp.data[playername].p1.y
+				current.z = current.z + wpp.data[playername].p1.z
+				if minetest.registered_nodes[current.name] then
+					minetest.env:set_node(current, current)
+					minetest.env:get_meta(current):from_table(current.meta)
+				else
+					if not wpp.data[playername].unkown then
+						wpp.data[playername].unkown = current.name
+					else
+						wpp.data[playername].unkown = wpp.data[playername].unkown..", "..current.name
+					end
+				end
+				wpp.data[playername].p = wpp.data[playername].p + 1
+				
+				i = i+1
+				if i >= NODES_PER_STEP then
+					return
+				end
+			end
+			send_player(playername, "Command \"load\" finished")
+			if wpp.data[playername].unkown then
+				send_player(playername, "Following nodes are unknown and not placed: "..wpp.data[playername].unkown)
+				wpp.data[playername].unkown = nil
+			end
 			wpp.data[playername].status = ""
 			wpp.data[playername].p = nil
 			table.remove(wpp.run_player, 1)
@@ -549,7 +610,7 @@ minetest.register_chatcommand("setarea", {
 			send_player(playername, "Position 2 not set")
 			return
 		end
-		wpp.data[playername].action = "set"
+		wpp.data[playername].action = "setarea"
 		wpp.data[playername].status = "waiting"
 		table.insert(wpp.run_player, playername)
 		send_player(playername, "Command \"setarea\" enqueued")
@@ -739,6 +800,57 @@ minetest.register_chatcommand("marker", {
 			send_player(playername, "Don't use markers")
 		else
 			send_player(playername, "Invalid parameters (\""..param.."\") (see /help marker)")
+		end
+	end,
+})
+
+local function schemversion(content)
+	if content:find("([+-]?%d+)%s+([+-]?%d+)%s+([+-]?%d+)") and not content:find("%{") then
+		return 3
+	elseif content:find("^[^\"']+%{%d+%}") then
+		if content:find("%[\"meta\"%]") then
+			return 2
+		end
+		return 1
+	elseif content:find("%{") then
+		return 4
+	end
+	return 0
+end
+
+minetest.register_chatcommand("load", {
+	params = "<filename>",
+	description = "Loads the .wem file into the world",
+	privs = {worldedit = true},
+	func = function(playername, param)
+		init_player(playername)
+		if check_running(playername) then return end
+		
+		if not wpp.data[playername].p1 then
+			send_player(playername, "No position 1 set")
+			return
+		end
+		
+		if param == "" then
+			send_player(playername, "No filename given")
+			return
+		else
+			local file = io.open(minetest.get_worldpath().."/schems/"..param..".wem")
+			if not file then
+				send_player(playername, "Can't open file "..minetest.get_worldpath().."/schems/"..param..".wem")
+				return
+			end
+			local content = file:read("*a")
+			if schemversion(content) ~= 4 then
+				send_player(playername, "File format not supported")
+				return
+			end
+			wpp.data[playername].nodes = minetest.deserialize(content)
+			file:close()
+			wpp.data[playername].action = "load"
+			wpp.data[playername].status = "waiting"
+			table.insert(wpp.run_player, playername)
+			send_player(playername, "Command \"load\" enqueued")
 		end
 	end,
 })
