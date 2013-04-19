@@ -78,6 +78,9 @@ Currently supported commands are:
  - /marker
    - parameter: "on" or "off"
    - select whether markers at position 1 & 2 should be shown or not
+ - /load
+   - parameter: filename without ".we" or ".wem" extention
+   - loads the nodes and places them in the world with position 1 as origin
 
 License
 -------
