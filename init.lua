@@ -835,10 +835,13 @@ minetest.register_chatcommand("load", {
 			send_player(playername, "No filename given")
 			return
 		else
-			local file = io.open(minetest.get_worldpath().."/schems/"..param..".wem")
+			local file = io.open(minetest.get_worldpath().."/schems/"..param..".we")
 			if not file then
-				send_player(playername, "Can't open file "..minetest.get_worldpath().."/schems/"..param..".wem")
-				return
+				file = io.open(minetest.get_worldpath().."/schems/"..param..".wem")
+				if not file then
+					send_player(playername, "Can't open file "..minetest.get_worldpath().."/schems/"..param..".we / .wem")
+					return
+				end
 			end
 			local content = file:read("*a")
 			if schemversion(content) ~= 4 then
