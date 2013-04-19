@@ -45,9 +45,10 @@ Currently supported commands are:
     - sets the node for the player
     - uses wielditem if nodename isnt specified
  - /set
-   - no parameters
+   - optional parameter: nodename
    - sets the region specified by position 1 & 2 to the the selected node
    - selects the wielditem if no node is selected
+   - nodename will be selected if given
  - /stop
    - no parameters
    - stops the running command of the player or removes the command for the
@@ -59,10 +60,11 @@ Currently supported commands are:
    - no parameters
    - continues the paused command of the player
  - /replace
-   - optional parameter: nodename
+   - optional parameter: nodename or nodename nodename
    - replaces the given node with the selected node in the region specified by
      position 1 & 2
    - uses wielditem if nodename isnt specified
+   - selects second nodename if given
  - /fixlight
    - no parameters
    - fixes light in the region specified by position 1 & 2 by digging air in it

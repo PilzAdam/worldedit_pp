@@ -515,21 +515,29 @@ minetest.register_chatcommand("select", {
 })
 
 minetest.register_chatcommand("set", {
-	params = "<none>",
+	params = "<none> | <nodename>",
 	description = "Sets nodes in area",
 	privs = {worldedit = true},
 	func = function(playername, param)
 		init_player(playername)
 		if check_running(playername) then return end
 		
-		if not wpp.data[playername].node then
-			local item = minetest.env:get_player_by_name(playername):get_wielded_item():get_name()
-			if minetest.registered_nodes[item] then
-				wpp.data[playername].node = item
-				send_player(playername, "Selecting wielditem")
-			else
-				send_player(playername, "No node selected and wielditem is not a node")
+		if param ~= "" then
+			if not minetest.registered_nodes[param] then
+				send_player("Unknonwn node: "..param)
 				return
+			end
+			wpp.data[playername].node = param
+		else
+			if not wpp.data[playername].node then
+				local item = minetest.env:get_player_by_name(playername):get_wielded_item():get_name()
+				if minetest.registered_nodes[item] then
+					wpp.data[playername].node = item
+					send_player(playername, "Selecting wielditem")
+				else
+					send_player(playername, "No node selected and wielditem is not a node")
+					return
+				end
 			end
 		end
 		if not wpp.data[playername].p1 then
@@ -571,17 +579,13 @@ minetest.register_chatcommand("dig", {
 })
 
 minetest.register_chatcommand("replace", {
-	params = "<none> | <nodename>",
+	params = "<none> | <nodename> | <nodename> <nodename>",
 	description = "Replaces node with selected node",
 	privs = {worldedit = true},
 	func = function(playername, param)
 		init_player(playername)
 		if check_running(playername) then return end
 		
-		if not wpp.data[playername].node then
-			send_player(playername, "No node selected")
-			return
-		end
 		if not wpp.data[playername].p1 then
 			send_player(playername, "No position 1 set. Please set one with /p1")
 			return
@@ -591,11 +595,21 @@ minetest.register_chatcommand("replace", {
 			return
 		end
 		if param ~= "" then
-			if not minetest.registered_nodes[param] then
-				send_player(playername, "Unknonwn node: "..param)
+			local n1, n2 = string.match(param, "^([a-zA-Z0-9_:]*) ([a-zA-Z0-9_:]*)$")
+			local node = n1 or param
+			if not minetest.registered_nodes[node] then
+				send_player(playername, "Unknonwn node: "..node)
 				return
 			end
-			wpp.data[playername].replace = param
+			wpp.data[playername].replace = node
+			if n2 then
+				if not minetest.registered_nodes[n2] then
+					send_player(playername, "Unknonwn node: "..n2)
+					return
+				end
+				send_player(playername, "Node selected: "..n2)
+				wpp.data[playername].node = n2
+			end
 		else
 			local item = minetest.env:get_player_by_name(playername):get_wielded_item():get_name()
 			if minetest.registered_nodes[item] then
@@ -604,6 +618,10 @@ minetest.register_chatcommand("replace", {
 				send_player(playername, "No node to replace given and wielditem is not a node")
 				return
 			end
+		end
+		if not wpp.data[playername].node then
+			send_player(playername, "No node selected")
+			return
 		end
 		if wpp.data[playername].replace == wpp.data[playername].node then
 			send_player(playername, "Nodes don't differ")
