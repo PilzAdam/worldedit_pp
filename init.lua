@@ -524,7 +524,7 @@ minetest.register_chatcommand("set", {
 		
 		if param ~= "" then
 			if not minetest.registered_nodes[param] then
-				send_player("Unknonwn node: "..param)
+				send_player(playername, "Unknonwn node: "..param)
 				return
 			end
 			wpp.data[playername].node = param
