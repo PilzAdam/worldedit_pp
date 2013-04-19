@@ -12,6 +12,8 @@ wpp.data = {}
 --     - replace
 --     - punch_1
 --     - punch_2
+--     - p1object
+--     - p2object
 
 local NODES_PER_STEP = 512
 
@@ -233,6 +235,76 @@ minetest.register_chatcommand("wpp", {
 	end,
 })
 
+minetest.register_entity("worldedit_pp:positionmarker", {
+	physical = false,
+	collisionbox = {0,0,0, 0,0,0},
+	visual_size = {x=1.1, y=1.1},
+	visual = "cube",
+	set_texture = function(self, texture)
+		local textures = {}
+		for i=1,6 do
+			textures[i] = texture
+		end
+		self.object:set_properties({
+			textures = textures,
+		})
+	end,
+	playername = nil,
+	timer = 0,
+	get_statictada = function(self)
+		return self.playername
+	end,
+	on_activate = function(self, staticdata)
+		self.playername = staticdata
+	end,
+	on_step = function(self, dtime)
+		self.timer = self.timer+dtime
+		if self.timer < 2 then
+			return
+		end
+		self.timer = 0
+		
+		if
+			not self.playername or
+			not wpp.data[self.playername] or
+			( wpp.data[self.playername].p1object ~= self.object and
+			  wpp.data[self.playername].p2object ~= self.object )
+		then
+			self.object:remove()
+		end
+	end,
+})
+
+local function set_p1(playername, pos)
+	wpp.data[playername].p1 = {
+		x = math.floor(pos.x + 0.5),
+		y = math.floor(pos.y + 0.5),
+		z = math.floor(pos.z + 0.5),
+	}
+	if wpp.data[playername].p1object and wpp.data[playername].p1object:getpos() then
+		wpp.data[playername].p1object:setpos(wpp.data[playername].p1)
+	else
+		wpp.data[playername].p1object = minetest.env:add_entity(wpp.data[playername].p1, "worldedit_pp:positionmarker")
+		wpp.data[playername].p1object:get_luaentity():set_texture("worldedit_pp_p1.png")
+		wpp.data[playername].p1object:get_luaentity().playername = playername
+	end
+end
+
+local function set_p2(playername, pos)
+	wpp.data[playername].p2 = {
+		x = math.floor(pos.x + 0.5),
+		y = math.floor(pos.y + 0.5),
+		z = math.floor(pos.z + 0.5),
+	}
+	if wpp.data[playername].p2object and wpp.data[playername].p2object:getpos() then
+		wpp.data[playername].p2object:setpos(wpp.data[playername].p2)
+	else
+		wpp.data[playername].p2object = minetest.env:add_entity(wpp.data[playername].p2, "worldedit_pp:positionmarker")
+		wpp.data[playername].p2object:get_luaentity():set_texture("worldedit_pp_p2.png")
+		wpp.data[playername].p2object:get_luaentity().playername = playername
+	end
+end
+
 minetest.register_chatcommand("p1", {
 	params = "<none> | <X>,<Y>,<Z>",
 	description = "Sets position 1",
@@ -249,7 +321,7 @@ minetest.register_chatcommand("p1", {
 				return
 			end
 		end
-		wpp.data[playername].p1 = {x=math.floor(0.5+p.x), y=math.floor(0.5+p.y), z=math.floor(0.5+p.z)}
+		set_p1(playername, p)
 		send_player(playername, "Position 1 set to "..minetest.pos_to_string(wpp.data[playername].p1))
 	end,
 })
@@ -270,9 +342,7 @@ minetest.register_chatcommand("p1a", {
 			send_player(playername, "Invalid parameters (\""..param.."\") (see /help p1a)")
 			return
 		end
-		wpp.data[playername].p1.x = wpp.data[playername].p1.x + math.floor(0.5 + x)
-		wpp.data[playername].p1.y = wpp.data[playername].p1.y + math.floor(0.5 + y)
-		wpp.data[playername].p1.z = wpp.data[playername].p1.z + math.floor(0.5 + z)
+		set_p1(playername, {x=x+wpp.data[playername].p1.x, y=y+wpp.data[playername].p1.y, z=z+wpp.data[playername].p1.z})
 		send_player(playername, "Position 1 set to "..minetest.pos_to_string(wpp.data[playername].p1))
 	end,
 })
@@ -293,7 +363,7 @@ minetest.register_chatcommand("p2", {
 				return
 			end
 		end
-		wpp.data[playername].p2 = {x=math.floor(0.5+p.x), y=math.floor(0.5+p.y), z=math.floor(0.5+p.z)}
+		set_p2(playername, p)
 		send_player(playername, "Position 2 set to "..minetest.pos_to_string(wpp.data[playername].p2))
 	end,
 })
@@ -314,9 +384,7 @@ minetest.register_chatcommand("p2a", {
 			send_player(playername, "Invalid parameters (\""..param.."\") (see /help p2a)")
 			return
 		end
-		wpp.data[playername].p2.x = wpp.data[playername].p2.x + math.floor(0.5 + x)
-		wpp.data[playername].p2.y = wpp.data[playername].p2.y + math.floor(0.5 + y)
-		wpp.data[playername].p2.z = wpp.data[playername].p2.z + math.floor(0.5 + z)
+		set_p2(playername, {x=x+wpp.data[playername].p2.x, y=y+wpp.data[playername].p2.y, z=z+wpp.data[playername].p2.z})
 		send_player(playername, "Position 2 set to "..minetest.pos_to_string(wpp.data[playername].p2))
 	end,
 })
@@ -353,12 +421,12 @@ minetest.register_on_punchnode(function(pos, node, puncher)
 		return
 	end
 	if wpp.data[playername].punch_1 then
-		wpp.data[playername].p1 = {x=pos.x, y=pos.y, z=pos.z}
+		set_p1(playername, pos)
 		wpp.data[playername].punch_1 = false
 		send_player(playername, "Position 1 set to "..minetest.pos_to_string(wpp.data[playername].p1))
 	end
 	if wpp.data[playername].punch_2 then
-		wpp.data[playername].p2 = {x=pos.x, y=pos.y, z=pos.z}
+		set_p2(playername, pos)
 		wpp.data[playername].punch_2 = false
 		send_player(playername, "Position 2 set to "..minetest.pos_to_string(wpp.data[playername].p2))
 	end

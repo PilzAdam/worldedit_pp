@@ -70,3 +70,4 @@ Currently supported commands are:
 License
 -------
 Sourcecode: WTFPL
+Textures: WTFPL
