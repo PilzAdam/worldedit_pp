@@ -83,7 +83,7 @@ minetest.register_globalstep(function(dtime)
 				end
 			end
 			minetest.env:set_node(wpp.data[playername].p, {name=wpp.data[playername].node})
-			send_player(playername, "Command \"set\" finished")
+			send_player(playername, "Command \"setarea\" finished")
 			wpp.data[playername].status = ""
 			wpp.data[playername].p = nil
 			table.remove(wpp.run_player, 1)
@@ -514,7 +514,7 @@ minetest.register_chatcommand("select", {
 	end,
 })
 
-minetest.register_chatcommand("set", {
+minetest.register_chatcommand("setarea", {
 	params = "<none> | <nodename>",
 	description = "Sets nodes in area",
 	privs = {worldedit = true},
@@ -551,7 +551,7 @@ minetest.register_chatcommand("set", {
 		wpp.data[playername].action = "set"
 		wpp.data[playername].status = "waiting"
 		table.insert(wpp.run_player, playername)
-		send_player(playername, "Command \"set\" enqueued")
+		send_player(playername, "Command \"setarea\" enqueued")
 	end,
 })
 
@@ -587,11 +587,11 @@ minetest.register_chatcommand("replace", {
 		if check_running(playername) then return end
 		
 		if not wpp.data[playername].p1 then
-			send_player(playername, "No position 1 set. Please set one with /p1")
+			send_player(playername, "No position 1 set")
 			return
 		end
 		if not wpp.data[playername].p2 then
-			send_player(playername, "No position 2 set. Please set one with /p2")
+			send_player(playername, "No position 2 set")
 			return
 		end
 		if param ~= "" then
@@ -643,11 +643,11 @@ minetest.register_chatcommand("fixlight", {
 		if check_running(playername) then return end
 		
 		if not wpp.data[playername].p1 then
-			send_player(playername, "No position 1 set. Please set one with /p1")
+			send_player(playername, "No position 1 set")
 			return
 		end
 		if not wpp.data[playername].p2 then
-			send_player(playername, "No position 2 set. Please set one with /p2")
+			send_player(playername, "No position 2 set")
 			return
 		end
 		wpp.data[playername].action = "fixlight"

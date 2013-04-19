@@ -44,7 +44,7 @@ Currently supported commands are:
     - optional param: nodename
     - sets the node for the player
     - uses wielditem if nodename isnt specified
- - /set
+ - /setarea
    - optional parameter: nodename
    - sets the region specified by position 1 & 2 to the the selected node
    - selects the wielditem if no node is selected
