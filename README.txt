@@ -32,6 +32,12 @@ Currently supported commands are:
  - /p2a:
     - parameter: <X>,<Y>,<Z>
     - adds given vector to position 2
+ - /p1p:
+    - no parameters
+    - sets position 1 to the next punched node by the player
+ - /p2p:
+    - no parameters
+    - sets position 2 to the next punched node by the player
  - /select
     - optional param: nodename
     - sets the node for the player

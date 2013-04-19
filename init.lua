@@ -10,6 +10,8 @@ wpp.data = {}
 --     - status ("wating", "running", "paused", "")
 --     - p
 --     - replace
+--     - punch_1
+--     - punch_2
 
 local NODES_PER_STEP = 512
 
@@ -318,6 +320,46 @@ minetest.register_chatcommand("p2a", {
 		send_player(playername, "Position 2 set to "..minetest.pos_to_string(wpp.data[playername].p2))
 	end,
 })
+
+minetest.register_chatcommand("p1p", {
+	params = "<none>",
+	description = "Sets position 1 to the next punched node",
+	privs = {worldedit = true},
+	func = function(playername, param)
+		init_player(playername)
+		if check_running(playername) then return end
+		
+		wpp.data[playername].punch_1 = true
+		send_player(playername, "Position 1 will be set to next punched node")
+	end,
+})
+
+minetest.register_chatcommand("p2p", {
+	params = "<none>",
+	description = "Sets position 2 to the next punched node",
+	privs = {worldedit = true},
+	func = function(playername, param)
+		init_player(playername)
+		if check_running(playername) then return end
+		
+		wpp.data[playername].punch_2 = true
+		send_player(playername, "Position 2 will be set to next punched node")
+	end,
+})
+
+minetest.register_on_punchnode(function(pos, node, puncher)
+	local playername = puncher:get_player_name()
+	if wpp.data[playername].punch_1 then
+		wpp.data[playername].p1 = {x=pos.x, y=pos.y, z=pos.z}
+		wpp.data[playername].punch_1 = false
+		send_player(playername, "Position 1 set to "..minetest.pos_to_string(wpp.data[playername].p1))
+	end
+	if wpp.data[playername].punch_2 then
+		wpp.data[playername].p2 = {x=pos.x, y=pos.y, z=pos.z}
+		wpp.data[playername].punch_2 = false
+		send_player(playername, "Position 2 set to "..minetest.pos_to_string(wpp.data[playername].p2))
+	end
+end)
 
 minetest.register_chatcommand("select", {
 	params = "<none> | <nodename>",
