@@ -135,7 +135,7 @@ minetest.register_globalstep(function(dtime)
 				wpp.data[playername].p.y ~= maxp.y or
 				wpp.data[playername].p.z ~= maxp.z
 			do
-				if math.random(1,2) == 1 and minetest.env:get_node(wpp.data[playername].p).name == "air" then
+				if minetest.env:get_node(wpp.data[playername].p).name == "air" then
 					minetest.env:dig_node(wpp.data[playername].p)
 				end
 				
@@ -349,6 +349,9 @@ minetest.register_chatcommand("p2p", {
 
 minetest.register_on_punchnode(function(pos, node, puncher)
 	local playername = puncher:get_player_name()
+	if not wpp.data[playername] then
+		return
+	end
 	if wpp.data[playername].punch_1 then
 		wpp.data[playername].p1 = {x=pos.x, y=pos.y, z=pos.z}
 		wpp.data[playername].punch_1 = false
