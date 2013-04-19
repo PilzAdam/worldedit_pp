@@ -252,6 +252,29 @@ minetest.register_chatcommand("p1", {
 	end,
 })
 
+minetest.register_chatcommand("p1a", {
+	params = "<X>,<Y>,<Z>",
+	description = "Adds given vector to position 1",
+	privs = {worldedit = true},
+	func = function(playername, param)
+		init_player(playername)
+		if check_running(playername) then return end
+		
+		if param == "" then
+			send_player(playername, "Invalid parameters (\""..param.."\") (see /help p1a)")
+		end
+		local x, y, z = string.match(param, "^([%d.-]+)[, ] *([%d.-]+)[, ] *([%d.-]+)$")
+		if not x or not y or not z then
+			send_player(playername, "Invalid parameters (\""..param.."\") (see /help p1a)")
+			return
+		end
+		wpp.data[playername].p1.x = wpp.data[playername].p1.x + math.floor(0.5 + x)
+		wpp.data[playername].p1.y = wpp.data[playername].p1.y + math.floor(0.5 + y)
+		wpp.data[playername].p1.z = wpp.data[playername].p1.z + math.floor(0.5 + z)
+		send_player(playername, "Position 1 set to "..minetest.pos_to_string(wpp.data[playername].p1))
+	end,
+})
+
 minetest.register_chatcommand("p2", {
 	params = "<none> | <X>,<Y>,<Z>",
 	description = "Sets position 2",
@@ -269,6 +292,29 @@ minetest.register_chatcommand("p2", {
 			end
 		end
 		wpp.data[playername].p2 = {x=math.floor(0.5+p.x), y=math.floor(0.5+p.y), z=math.floor(0.5+p.z)}
+		send_player(playername, "Position 2 set to "..minetest.pos_to_string(wpp.data[playername].p2))
+	end,
+})
+
+minetest.register_chatcommand("p2a", {
+	params = "<X>,<Y>,<Z>",
+	description = "Adds given vector to position 2",
+	privs = {worldedit = true},
+	func = function(playername, param)
+		init_player(playername)
+		if check_running(playername) then return end
+		
+		if param == "" then
+			send_player(playername, "Invalid parameters (\""..param.."\") (see /help p2a)")
+		end
+		local x, y, z = string.match(param, "^([%d.-]+)[, ] *([%d.-]+)[, ] *([%d.-]+)$")
+		if not x or not y or not z then
+			send_player(playername, "Invalid parameters (\""..param.."\") (see /help p2a)")
+			return
+		end
+		wpp.data[playername].p2.x = wpp.data[playername].p2.x + math.floor(0.5 + x)
+		wpp.data[playername].p2.y = wpp.data[playername].p2.y + math.floor(0.5 + y)
+		wpp.data[playername].p2.z = wpp.data[playername].p2.z + math.floor(0.5 + z)
 		send_player(playername, "Position 2 set to "..minetest.pos_to_string(wpp.data[playername].p2))
 	end,
 })
@@ -309,15 +355,21 @@ minetest.register_chatcommand("set", {
 		if check_running(playername) then return end
 		
 		if not wpp.data[playername].node then
-			send_player(playername, "No node selected. Please select one with /select")
-			return
+			local item = minetest.env:get_player_by_name(playername):get_wielded_item():get_name()
+			if minetest.registered_nodes[item] then
+				wpp.data[playername].node = item
+				send_player(playername, "Selecting wielditem")
+			else
+				send_player(playername, "No node selected and wielditem is not a node")
+				return
+			end
 		end
 		if not wpp.data[playername].p1 then
-			send_player(playername, "No position 1 set. Please set one with /p1")
+			send_player(playername, "Position 1 not set")
 			return
 		end
 		if not wpp.data[playername].p2 then
-			send_player(playername, "No position 2 set. Please set one with /p2")
+			send_player(playername, "Position 2 not set")
 			return
 		end
 		wpp.data[playername].action = "set"
@@ -336,7 +388,7 @@ minetest.register_chatcommand("replace", {
 		if check_running(playername) then return end
 		
 		if not wpp.data[playername].node then
-			send_player(playername, "No node selected. Please select one with /select")
+			send_player(playername, "No node selected")
 			return
 		end
 		if not wpp.data[playername].p1 then
@@ -354,7 +406,13 @@ minetest.register_chatcommand("replace", {
 			end
 			wpp.data[playername].replace = param
 		else
-			wpp.data[playername].replace = minetest.env:get_player_by_name(playername):get_wielded_item():get_name()
+			local item = minetest.env:get_player_by_name(playername):get_wielded_item():get_name()
+			if minetest.registered_nodes[item] then
+				wpp.data[playername].replace = item
+			else
+				send_player(playername, "No node to replace given and wielditem is not a node")
+				return
+			end
 		end
 		if wpp.data[playername].replace == wpp.data[playername].node then
 			send_player(playername, "Nodes don't differ")

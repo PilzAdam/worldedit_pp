@@ -23,8 +23,15 @@ Currently supported commands are:
     - sets position 1 for the player to the player position or x,y,z if
       specified
  - /p2:
-    - sets position 2 for the player
-    - see /p1
+    - optional parameter: <X>,<Y>,<Z>
+    - sets position 2 for the player to the player position or x,y,z if
+      specified
+ - /p1a:
+    - parameter: <X>,<Y>,<Z>
+    - adds given vector to position 1
+ - /p2a:
+    - parameter: <X>,<Y>,<Z>
+    - adds given vector to position 2
  - /select
     - optional param: nodename
     - sets the node for the player
@@ -32,6 +39,7 @@ Currently supported commands are:
  - /set
    - no parameters
    - sets the region specified by position 1 & 2 to the the selected node
+   - selects the wielditem if no node is selected
  - /stop
    - no parameters
    - stops the running command of the player or removes the command for the
