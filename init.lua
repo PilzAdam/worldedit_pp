@@ -77,6 +77,7 @@ minetest.register_globalstep(function(dtime)
 					return
 				end
 			end
+			minetest.env:set_node(wpp.data[playername].p, {name=wpp.data[playername].node})
 			send_player(playername, "Command \"set\" finished")
 			wpp.data[playername].status = ""
 			wpp.data[playername].p = nil
@@ -114,6 +115,9 @@ minetest.register_globalstep(function(dtime)
 					return
 				end
 			end
+			if minetest.env:get_node(wpp.data[playername].p).name == wpp.data[playername].replace then
+				minetest.env:set_node(wpp.data[playername].p, {name=wpp.data[playername].node})
+			end
 			send_player(playername, "Command \"replace\" finished")
 			wpp.data[playername].status = ""
 			wpp.data[playername].p = nil
@@ -129,7 +133,7 @@ minetest.register_globalstep(function(dtime)
 				wpp.data[playername].p.y ~= maxp.y or
 				wpp.data[playername].p.z ~= maxp.z
 			do
-				if i % 2 == 0 and minetest.env:get_node(wpp.data[playername].p).name == "air" then
+				if math.random(1,2) == 1 and minetest.env:get_node(wpp.data[playername].p).name == "air" then
 					minetest.env:dig_node(wpp.data[playername].p)
 				end
 				
@@ -150,6 +154,9 @@ minetest.register_globalstep(function(dtime)
 				if i >= NODES_PER_STEP then
 					return
 				end
+			end
+			if math.random(1,2) == 1 and minetest.env:get_node(wpp.data[playername].p).name == "air" then
+				minetest.env:dig_node(wpp.data[playername].p)
 			end
 			send_player(playername, "Command \"fixlight\" finished")
 			wpp.data[playername].status = ""
