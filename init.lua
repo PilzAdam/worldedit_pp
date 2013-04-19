@@ -244,10 +244,20 @@ minetest.register_globalstep(function(dtime)
 					minetest.env:set_node(current, current)
 					minetest.env:get_meta(current):from_table(current.meta)
 				else
+					local function contains(table, string)
+						for i=1,#table do
+							if string == table[i] then
+								return true
+							end
+						end
+						return false
+					end
 					if not wpp.data[playername].unkown then
-						wpp.data[playername].unkown = current.name
+						wpp.data[playername].unkown = {current.name}
 					else
-						wpp.data[playername].unkown = wpp.data[playername].unkown..", "..current.name
+						if not contains(wpp.data[playername].unkown, current.name) then
+							table.insert(wpp.data[playername].unkown, current.name)
+						end
 					end
 				end
 				wpp.data[playername].p = wpp.data[playername].p + 1
@@ -259,7 +269,13 @@ minetest.register_globalstep(function(dtime)
 			end
 			send_player(playername, "Command \"load\" finished")
 			if wpp.data[playername].unkown then
-				send_player(playername, "Following nodes are unknown and not placed: "..wpp.data[playername].unkown)
+				local unknown = wpp.data[playername].unkown[1]
+				if #wpp.data[playername].unkown > 1 then
+					for i=2,#wpp.data[playername].unkown do
+						unknown = unknown..", "..wpp.data[playername].unkown[i]
+					end
+				end
+				send_player(playername, "Following nodes are unknown and not placed: "..unknown)
 				wpp.data[playername].unkown = nil
 			end
 			wpp.data[playername].status = ""
