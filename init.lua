@@ -17,6 +17,7 @@ wpp.data = {}
 --     - marker
 
 local NODES_PER_STEP = 512
+local NODES_PER_STEP_SLOW = 256
 
 local function minmaxp(p1, p2)
 	return 
@@ -114,7 +115,7 @@ minetest.register_globalstep(function(dtime)
 				end
 				
 				i = i+1
-				if i >= NODES_PER_STEP then
+				if i >= NODES_PER_STEP_SLOW then
 					return
 				end
 			end
@@ -192,7 +193,7 @@ minetest.register_globalstep(function(dtime)
 				end
 				
 				i = i+1
-				if i >= NODES_PER_STEP then
+				if i >= NODES_PER_STEP_SLOW then
 					return
 				end
 			end
