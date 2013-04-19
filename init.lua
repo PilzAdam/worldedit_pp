@@ -14,6 +14,7 @@ wpp.data = {}
 --     - punch_2
 --     - p1object
 --     - p2object
+--     - marker
 
 local NODES_PER_STEP = 512
 
@@ -213,7 +214,10 @@ end)
 
 local function init_player(playername)
 	if not wpp.data[playername] then
-		wpp.data[playername] = {status = ""}
+		wpp.data[playername] = {
+			status = "",
+			marker = true,
+		}
 	end
 end
 
@@ -295,7 +299,7 @@ minetest.register_entity("worldedit_pp:positionmarker", {
 	end,
 	on_step = function(self, dtime)
 		self.timer = self.timer+dtime
-		if self.timer < 2 then
+		if self.timer < 1 then
 			return
 		end
 		self.timer = 0
@@ -304,7 +308,8 @@ minetest.register_entity("worldedit_pp:positionmarker", {
 			not self.playername or
 			not wpp.data[self.playername] or
 			( wpp.data[self.playername].p1object ~= self.object and
-			  wpp.data[self.playername].p2object ~= self.object )
+			  wpp.data[self.playername].p2object ~= self.object ) or
+			not wpp.data[self.playername].marker
 		then
 			self.object:remove()
 		end
@@ -317,12 +322,14 @@ local function set_p1(playername, pos)
 		y = math.floor(pos.y + 0.5),
 		z = math.floor(pos.z + 0.5),
 	}
-	if wpp.data[playername].p1object and wpp.data[playername].p1object:getpos() then
-		wpp.data[playername].p1object:setpos(wpp.data[playername].p1)
-	else
-		wpp.data[playername].p1object = minetest.env:add_entity(wpp.data[playername].p1, "worldedit_pp:positionmarker")
-		wpp.data[playername].p1object:get_luaentity():set_texture("worldedit_pp_p1.png")
-		wpp.data[playername].p1object:get_luaentity().playername = playername
+	if wpp.data[playername].marker then
+		if wpp.data[playername].p1object and wpp.data[playername].p1object:getpos() then
+			wpp.data[playername].p1object:setpos(wpp.data[playername].p1)
+		else
+			wpp.data[playername].p1object = minetest.env:add_entity(wpp.data[playername].p1, "worldedit_pp:positionmarker")
+			wpp.data[playername].p1object:get_luaentity():set_texture("worldedit_pp_p1.png")
+			wpp.data[playername].p1object:get_luaentity().playername = playername
+		end
 	end
 end
 
@@ -332,12 +339,14 @@ local function set_p2(playername, pos)
 		y = math.floor(pos.y + 0.5),
 		z = math.floor(pos.z + 0.5),
 	}
-	if wpp.data[playername].p2object and wpp.data[playername].p2object:getpos() then
-		wpp.data[playername].p2object:setpos(wpp.data[playername].p2)
-	else
-		wpp.data[playername].p2object = minetest.env:add_entity(wpp.data[playername].p2, "worldedit_pp:positionmarker")
-		wpp.data[playername].p2object:get_luaentity():set_texture("worldedit_pp_p2.png")
-		wpp.data[playername].p2object:get_luaentity().playername = playername
+	if wpp.data[playername].marker then
+		if wpp.data[playername].p2object and wpp.data[playername].p2object:getpos() then
+			wpp.data[playername].p2object:setpos(wpp.data[playername].p2)
+		else
+			wpp.data[playername].p2object = minetest.env:add_entity(wpp.data[playername].p2, "worldedit_pp:positionmarker")
+			wpp.data[playername].p2object:get_luaentity():set_texture("worldedit_pp_p2.png")
+			wpp.data[playername].p2object:get_luaentity().playername = playername
+		end
 	end
 end
 
@@ -690,6 +699,27 @@ minetest.register_chatcommand("continue", {
 			send_player(playername, "Command enqueued")
 		else
 			send_player(playername, "No paused command for you found")
+		end
+	end,
+})
+
+minetest.register_chatcommand("marker", {
+	params = "on/off",
+	description = "Switch markers on/off",
+	privs = {worldedit = true},
+	func = function(playername, param)
+		init_player(playername)
+		
+		if param == "on" then
+			wpp.data[playername].marker = true
+			send_player(playername, "Using markers")
+			set_p1(playername, wpp.data[playername].p1)
+			set_p2(playername, wpp.data[playername].p2)
+		elseif param == "off" then
+			wpp.data[playername].marker = false
+			send_player(playername, "Don't use markers")
+		else
+			send_player(playername, "Invalid parameters (\""..param.."\") (see /help marker)")
 		end
 	end,
 })

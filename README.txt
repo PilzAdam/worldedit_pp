@@ -73,6 +73,9 @@ Currently supported commands are:
    - digs nodes in region specified by position 1 & 2
    - NOTE: this might cause lag and take longer than the ETA printed at the
            beginning
+ - /marker
+   - parameter: "on" or "off"
+   - select whether markers at position 1 & 2 should be shown or not
 
 License
 -------
