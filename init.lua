@@ -523,6 +523,11 @@ minetest.register_chatcommand("wpp", {
 		else
 			send_player(playername, "Position 2 not set")
 		end
+		if wpp.data[playername].p3 then
+			send_player(playername, "Position 3: "..minetest.pos_to_string(wpp.data[playername].p3))
+		else
+			send_player(playername, "Position 3 not set")
+		end
 		if wpp.data[playername].node then
 			send_player(playername, "Selected node: "..wpp.data[playername].node)
 		else
