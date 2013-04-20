@@ -21,16 +21,16 @@ Currently supported commands are:
       of the player
  - /p#
     - optional parameter: <X>,<Y>,<Z>
-    - # is either 1, 2 or 2
+    - # is either 1, 2 or 3
     - sets position # for the player to the player position or x,y,z if
       specified
  - /p#a
     - parameter: <X>,<Y>,<Z>
-    - # is either 1, 2 or 2
+    - # is either 1, 2 or 3
     - adds given vector to position #
  - /p#p
     - no parameters
-    - # is either 1, 2 or 2
+    - # is either 1, 2 or 3
     - sets position # to the next punched node by the player
     - call it again if you don't want to change it anymore
  - /select
