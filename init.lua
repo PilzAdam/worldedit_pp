@@ -6,18 +6,19 @@ wpp.data = {}
 --     - p1
 --     - p2
 --     - node
---     - action
+--     - action: nil if status = ""
 --     - status ("wating", "running", "paused", "")
---     - p
+--     - p: pos or number (in /load)
 --     - replace
 --     - punch_1
 --     - punch_2
 --     - p1object
 --     - p2object
 --     - marker
---     - nodes
---     - unkown
---     - file
+--     - nodes: for /load, /save and /move
+--     - unkown: for /load
+--     - file: for /save
+--     - count
 
 local NODES_PER_STEP = 512
 local NODES_PER_STEP_SLOW = 256
@@ -65,6 +66,7 @@ minetest.register_globalstep(function(dtime)
 				wpp.data[playername].p.z <= maxp.z
 			do
 				minetest.env:set_node(wpp.data[playername].p, {name=wpp.data[playername].node})
+				wpp.data[playername].count = wpp.data[playername].count + 1
 				
 				wpp.data[playername].p.z = wpp.data[playername].p.z+1
 				if wpp.data[playername].p.z > maxp.z then
@@ -85,6 +87,8 @@ minetest.register_globalstep(function(dtime)
 				end
 			end
 			send_player(playername, "Command \"setarea\" finished")
+			send_player(playername, wpp.data[playername].count.." nodes set")
+			wpp.data[playername].count = 0
 			wpp.data[playername].status = ""
 			wpp.data[playername].p = nil
 			table.remove(wpp.run_player, 1)
@@ -107,6 +111,7 @@ minetest.register_globalstep(function(dtime)
 				wpp.data[playername].p.z <= maxp.z
 			do
 				minetest.env:dig_node(wpp.data[playername].p)
+				wpp.data[playername].count = wpp.data[playername].count + 1
 				
 				wpp.data[playername].p.z = wpp.data[playername].p.z+1
 				if wpp.data[playername].p.z > maxp.z then
@@ -127,6 +132,8 @@ minetest.register_globalstep(function(dtime)
 				end
 			end
 			send_player(playername, "Command \"dig\" finished")
+			send_player(playername, wpp.data[playername].count.." nodes dug")
+			wpp.data[playername].count = 0
 			wpp.data[playername].status = ""
 			wpp.data[playername].p = nil
 			table.remove(wpp.run_player, 1)
@@ -150,6 +157,7 @@ minetest.register_globalstep(function(dtime)
 			do
 				if minetest.env:get_node(wpp.data[playername].p).name == wpp.data[playername].replace then
 					minetest.env:set_node(wpp.data[playername].p, {name=wpp.data[playername].node})
+					wpp.data[playername].count = wpp.data[playername].count +1
 				end
 				
 				wpp.data[playername].p.z = wpp.data[playername].p.z+1
@@ -171,6 +179,8 @@ minetest.register_globalstep(function(dtime)
 				end
 			end
 			send_player(playername, "Command \"replace\" finished")
+			send_player(playername, wpp.data[playername].count.." nodes replaced")
+			wpp.data[playername].count = 0
 			wpp.data[playername].status = ""
 			wpp.data[playername].p = nil
 			table.remove(wpp.run_player, 1)
@@ -194,6 +204,7 @@ minetest.register_globalstep(function(dtime)
 			do
 				if minetest.env:get_node(wpp.data[playername].p).name == "air" then
 					minetest.env:dig_node(wpp.data[playername].p)
+					wpp.data[playername].count = wpp.data[playername].count + 1
 				end
 				
 				wpp.data[playername].p.z = wpp.data[playername].p.z+1
@@ -215,6 +226,8 @@ minetest.register_globalstep(function(dtime)
 				end
 			end
 			send_player(playername, "Command \"fixlight\" finished")
+			send_player(playername, wpp.data[playername].count.." air nodes dug")
+			wpp.data[playername].count = 0
 			wpp.data[playername].status = ""
 			wpp.data[playername].p = nil
 			table.remove(wpp.run_player, 1)
@@ -236,6 +249,7 @@ minetest.register_globalstep(function(dtime)
 				if minetest.registered_nodes[current.name] then
 					minetest.env:set_node(current, current)
 					minetest.env:get_meta(current):from_table(current.meta)
+					wpp.data[playername].count = wpp.data[playername].count + 1
 				else
 					local function contains(table, string)
 						for i=1,#table do
@@ -261,6 +275,8 @@ minetest.register_globalstep(function(dtime)
 				end
 			end
 			send_player(playername, "Command \"load\" finished")
+			send_player(playername, wpp.data[playername].count.." nodes loaded")
+			wpp.data[playername].count = 0
 			if wpp.data[playername].unkown then
 				local unknown = wpp.data[playername].unkown[1]
 				if #wpp.data[playername].unkown > 1 then
@@ -309,6 +325,7 @@ minetest.register_globalstep(function(dtime)
 					n.y = wpp.data[playername].p.y - minp.y
 					n.z = wpp.data[playername].p.z - minp.z
 					table.insert(wpp.data[playername].nodes, n)
+					wpp.data[playername].count = wpp.data[playername].count + 1
 				end
 				
 				wpp.data[playername].p.z = wpp.data[playername].p.z+1
@@ -341,6 +358,8 @@ minetest.register_globalstep(function(dtime)
 			file:close()
 			
 			send_player(playername, "Command \"save\" finished")
+			send_player(playername, wpp.data[playername].count.." nodes saved")
+			wpp.data[playername].count = 0
 			wpp.data[playername].status = ""
 			wpp.data[playername].p = nil
 			table.remove(wpp.run_player, 1)
@@ -358,6 +377,7 @@ local function init_player(playername)
 		wpp.data[playername] = {
 			status = "",
 			marker = true,
+			count = 0,
 		}
 	end
 end
@@ -930,7 +950,7 @@ minetest.register_chatcommand("load", {
 		wpp.data[playername].nodes = minetest.deserialize(content)
 		file:close()
 		if not wpp.data[playername].nodes then
-			send_player(playername, "File corrupted")
+			send_player(playername, "File corrupted (possibly too big)")
 			return
 		end
 		wpp.data[playername].action = "load"
