@@ -24,7 +24,7 @@ wpp.data = {}
 --     - count
 
 local NODES_PER_STEP = 512
-local NODES_PER_STEP_SLOW = 256
+local NODES_PER_STEP_SLOW = 64
 
 local function minmaxp(p1, p2)
 	return 
