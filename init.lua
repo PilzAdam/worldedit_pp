@@ -291,6 +291,7 @@ minetest.register_globalstep(function(dtime)
 				wpp.data[playername].unkown = nil
 			end
 			wpp.data[playername].status = ""
+			wpp.data[playername].nodes = nil
 			wpp.data[playername].p = nil
 			table.remove(wpp.run_player, 1)
 		elseif wpp.data[playername].action == "save" then
@@ -365,6 +366,7 @@ minetest.register_globalstep(function(dtime)
 			wpp.data[playername].count = 0
 			wpp.data[playername].status = ""
 			wpp.data[playername].p = nil
+			wpp.data[playername].nodes = nil
 			table.remove(wpp.run_player, 1)
 		elseif wpp.data[playername].action == "move_read" or wpp.data[playername].action == "copy_read" then
 			local minp, maxp = minmaxp(wpp.data[playername].p1, wpp.data[playername].p2)
@@ -463,12 +465,14 @@ minetest.register_globalstep(function(dtime)
 			wpp.data[playername].count = 0
 			wpp.data[playername].status = ""
 			wpp.data[playername].p = nil
+			wpp.data[playername].nodes = nil
 			table.remove(wpp.run_player, 1)
 		else
 			wpp.data[playername].status = ""
 			send_player(playername, "Error occured: Unknonw action")
 			table.remove(wpp.run_player, 1)
 			wpp.data[playername].p = nil
+			wpp.data[playername].nodes = nil
 		end
 	end
 end)
