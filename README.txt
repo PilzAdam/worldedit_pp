@@ -4,15 +4,16 @@ by PilzAdam
 
 Descripton
 ----------
-Worldedit++ adds commands to Minetest to easily set thousands of nodes. Most of
-them require the "worldedit" privilege.
+Worldedit++ adds commands to Minetest to easily set/modify thousands of nodes.
+All commands require the "worldedit" privilege.
 The commands are executed step by step, wich means that the server does not lag
-at all if a Worldedit++ command is running. It still 100% playable.
+at all if a Worldedit++ command is running. It is still 100% playable.
 If a player starts a command it gets enqueued into the serverqueue, and it will
-be started if the commands in front of it are executed. This makes it easy to
+be started if the commands in front of it are finished. This makes it easy to
 use on multiplayer servers.
 Every player can only have one command at the same time, wich is either running,
-waiting or paused. Position 1 & 2 and the selected are also saved per player.
+waiting or paused. Position 1 & 2 and the selected node are also saved per
+player. They can't be changed while a command is running, waiting or paused.
 Currently supported commands are:
  - /wpp
     - no parameters
@@ -81,6 +82,8 @@ Currently supported commands are:
  - /load
    - parameter: filename without ".we" or ".wem" extention
    - loads the nodes and places them in the world with position 1 as origin
+   - currently only the latest version of the schemes from Worldedit is
+     supported
 
 License
 -------
