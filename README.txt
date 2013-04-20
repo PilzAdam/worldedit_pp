@@ -83,6 +83,11 @@ Currently supported commands are:
      <worlddirectory>/schems/<filename>.we
    - files can't be overwritten
    - NOTE: Writing the file might cause lag
+ - /move
+   - no parameters
+   - moves the nodes in region specified by position 1 & to position 3
+   - position 3 equals position 1 in the old region
+   - all nodes in the old region will be removed
 
 License
 -------

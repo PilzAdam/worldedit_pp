@@ -366,6 +366,89 @@ minetest.register_globalstep(function(dtime)
 			wpp.data[playername].status = ""
 			wpp.data[playername].p = nil
 			table.remove(wpp.run_player, 1)
+		elseif wpp.data[playername].action == "move_read" then
+			local minp, maxp = minmaxp(wpp.data[playername].p1, wpp.data[playername].p2)
+			if wpp.data[playername].status ~= "running" then
+				local eta = (maxp.x-minp.x)*(maxp.y-minp.y)*(maxp.z-minp.z)/NODES_PER_STEP * wpp.dtime
+				eta = math.floor(eta)*2
+				send_player(playername, "Starting your command \"move\"; ETA: "..eta.." seconds (based on average server speed)")
+				wpp.data[playername].status = "running"
+			end
+			if not wpp.data[playername].p then
+				wpp.data[playername].p = {x=minp.x, y=minp.y, z=minp.z}
+			end
+			if not wpp.data[playername].nodes then
+				wpp.data[playername].nodes = {}
+			end
+			
+			local i = 0
+			while
+				wpp.data[playername].p.x <= maxp.x or
+				wpp.data[playername].p.y <= maxp.y or
+				wpp.data[playername].p.z <= maxp.z
+			do
+				local n = minetest.env:get_node(wpp.data[playername].p)
+				if n.name ~= "air" and n.name ~= "ignore" then
+					local meta = minetest.env:get_meta(wpp.data[playername].p):to_table()
+					--convert metadata itemstacks to itemstrings
+					for name, inventory in pairs(meta.inventory) do
+						for index, stack in ipairs(inventory) do
+							inventory[index] = stack:to_string()
+						end
+					end
+					n.meta = meta
+					n.x = wpp.data[playername].p.x - wpp.data[playername].p1.x
+					n.y = wpp.data[playername].p.y - wpp.data[playername].p1.y
+					n.z = wpp.data[playername].p.z - wpp.data[playername].p1.z
+					table.insert(wpp.data[playername].nodes, n)
+					minetest.env:remove_node(wpp.data[playername].p)
+					wpp.data[playername].count = wpp.data[playername].count + 1
+				end
+				
+				wpp.data[playername].p.z = wpp.data[playername].p.z+1
+				if wpp.data[playername].p.z > maxp.z then
+					wpp.data[playername].p.z = minp.z
+					wpp.data[playername].p.y = wpp.data[playername].p.y+1
+					if wpp.data[playername].p.y > maxp.y then
+						wpp.data[playername].p.y = minp.y
+						wpp.data[playername].p.x = wpp.data[playername].p.x+1
+						if wpp.data[playername].p.x > maxp.x then
+							break
+						end
+					end
+				end
+				
+				i = i+1
+				if i >= NODES_PER_STEP then
+					return
+				end
+			end
+			wpp.data[playername].action = "move_write"
+			wpp.data[playername].p = nil
+		elseif wpp.data[playername].action == "move_write" then
+			local i = 0
+			while #wpp.data[playername].nodes > 0 do
+				local num = #wpp.data[playername].nodes
+				local current = wpp.data[playername].nodes[num]
+				current.x = current.x + wpp.data[playername].p3.x
+				current.y = current.y + wpp.data[playername].p3.y
+				current.z = current.z + wpp.data[playername].p3.z
+				
+				minetest.env:set_node(current, current)
+				minetest.env:get_meta(current):from_table(current.meta)
+				table.remove(wpp.data[playername].nodes, num)
+				
+				i = i+1
+				if i >= NODES_PER_STEP then
+					return
+				end
+			end
+			send_player(playername, "Command \"move\" finished")
+			send_player(playername, wpp.data[playername].count.." nodes moved")
+			wpp.data[playername].count = 0
+			wpp.data[playername].status = ""
+			wpp.data[playername].p = nil
+			table.remove(wpp.run_player, 1)
 		else
 			wpp.data[playername].status = ""
 			send_player(playername, "Error occured: Unknonw action")
@@ -1079,5 +1162,33 @@ minetest.register_chatcommand("save", {
 		wpp.data[playername].status = "waiting"
 		table.insert(wpp.run_player, playername)
 		send_player(playername, "Command \"save\" enqueued")
+	end,
+})
+
+minetest.register_chatcommand("move", {
+	params = "<none>",
+	description = "Moves nodes to position 3",
+	privs = {worldedit = true},
+	func = function(playername, param)
+		init_player(playername)
+		if check_running(playername) then return end
+		
+		if not wpp.data[playername].p1 then
+			send_player(playername, "No position 1 set")
+			return
+		end
+		if not wpp.data[playername].p2 then
+			send_player(playername, "No position 2 set")
+			return
+		end
+		if not wpp.data[playername].p3 then
+			send_player(playername, "No position 3 set")
+			return
+		end
+		
+		wpp.data[playername].action = "move_read"
+		wpp.data[playername].status = "waiting"
+		table.insert(wpp.run_player, playername)
+		send_player(playername, "Command \"move\" enqueued")
 	end,
 })
