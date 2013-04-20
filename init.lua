@@ -5,6 +5,7 @@ wpp.data = {}
 -- - playername
 --     - p1
 --     - p2
+--     - p3: for /move only
 --     - node
 --     - action: nil if status = ""
 --     - status ("wating", "running", "paused", "")
@@ -12,8 +13,10 @@ wpp.data = {}
 --     - replace
 --     - punch_1
 --     - punch_2
+--     - punch_3
 --     - p1object
 --     - p2object
+--     - p3object
 --     - marker
 --     - nodes: for /load, /save and /move
 --     - unkown: for /load
@@ -469,7 +472,8 @@ minetest.register_entity("worldedit_pp:positionmarker", {
 			not self.playername or
 			not wpp.data[self.playername] or
 			( wpp.data[self.playername].p1object ~= self.object and
-			  wpp.data[self.playername].p2object ~= self.object ) or
+			  wpp.data[self.playername].p2object ~= self.object and
+			  wpp.data[self.playername].p3object ~= self.object ) or
 			not wpp.data[self.playername].marker
 		then
 			self.object:remove()
@@ -507,6 +511,23 @@ local function set_p2(playername, pos)
 			wpp.data[playername].p2object = minetest.env:add_entity(wpp.data[playername].p2, "worldedit_pp:positionmarker")
 			wpp.data[playername].p2object:get_luaentity():set_texture("worldedit_pp_p2.png")
 			wpp.data[playername].p2object:get_luaentity().playername = playername
+		end
+	end
+end
+
+local function set_p3(playername, pos)
+	wpp.data[playername].p3 = {
+		x = math.floor(pos.x + 0.5),
+		y = math.floor(pos.y + 0.5),
+		z = math.floor(pos.z + 0.5),
+	}
+	if wpp.data[playername].marker then
+		if wpp.data[playername].p3object and wpp.data[playername].p3object:getpos() then
+			wpp.data[playername].p3object:setpos(wpp.data[playername].p3)
+		else
+			wpp.data[playername].p3object = minetest.env:add_entity(wpp.data[playername].p3, "worldedit_pp:positionmarker")
+			wpp.data[playername].p3object:get_luaentity():set_texture("worldedit_pp_p3.png")
+			wpp.data[playername].p3object:get_luaentity().playername = playername
 		end
 	end
 end
@@ -553,6 +574,24 @@ minetest.register_chatcommand("p1a", {
 	end,
 })
 
+minetest.register_chatcommand("p1p", {
+	params = "<none>",
+	description = "Sets position 1 to the next punched node",
+	privs = {worldedit = true},
+	func = function(playername, param)
+		init_player(playername)
+		if check_running(playername) then return end
+		
+		if wpp.data[playername].punch_1 then
+			wpp.data[playername].punch_1 = false
+			send_player(playername, "Position 1 will not be set to next punched node")
+		else
+			wpp.data[playername].punch_1 = true
+			send_player(playername, "Position 1 will be set to next punched node")
+		end
+	end,
+})
+
 minetest.register_chatcommand("p2", {
 	params = "<none> | <X>,<Y>,<Z>",
 	description = "Sets position 2",
@@ -595,24 +634,6 @@ minetest.register_chatcommand("p2a", {
 	end,
 })
 
-minetest.register_chatcommand("p1p", {
-	params = "<none>",
-	description = "Sets position 1 to the next punched node",
-	privs = {worldedit = true},
-	func = function(playername, param)
-		init_player(playername)
-		if check_running(playername) then return end
-		
-		if wpp.data[playername].punch_1 then
-			wpp.data[playername].punch_1 = false
-			send_player(playername, "Position 1 will not be set to next punched node")
-		else
-			wpp.data[playername].punch_1 = true
-			send_player(playername, "Position 1 will be set to next punched node")
-		end
-	end,
-})
-
 minetest.register_chatcommand("p2p", {
 	params = "<none>",
 	description = "Sets position 2 to the next punched node",
@@ -631,6 +652,66 @@ minetest.register_chatcommand("p2p", {
 	end,
 })
 
+minetest.register_chatcommand("p3", {
+	params = "<none> | <X>,<Y>,<Z>",
+	description = "Sets position 3",
+	privs = {worldedit = true},
+	func = function(playername, param)
+		init_player(playername)
+		if check_running(playername) then return end
+		
+		local p = minetest.env:get_player_by_name(playername):getpos()
+		if param ~= "" then
+			p.x, p.y, p.z = string.match(param, "^([%d.-]+)[, ] *([%d.-]+)[, ] *([%d.-]+)$")
+			if not p.x or not p.y or not p.z then
+				send_player(playername, "Invalid parameters (\""..param.."\") (see /help p3)")
+				return
+			end
+		end
+		set_p3(playername, p)
+		send_player(playername, "Position 3 set to "..minetest.pos_to_string(wpp.data[playername].p3))
+	end,
+})
+
+minetest.register_chatcommand("p3a", {
+	params = "<X>,<Y>,<Z>",
+	description = "Adds given vector to position 3",
+	privs = {worldedit = true},
+	func = function(playername, param)
+		init_player(playername)
+		if check_running(playername) then return end
+		
+		if param == "" then
+			send_player(playername, "Invalid parameters (\""..param.."\") (see /help p3a)")
+		end
+		local x, y, z = string.match(param, "^([%d.-]+)[, ] *([%d.-]+)[, ] *([%d.-]+)$")
+		if not x or not y or not z then
+			send_player(playername, "Invalid parameters (\""..param.."\") (see /help p3a)")
+			return
+		end
+		set_p3(playername, {x=x+wpp.data[playername].p3.x, y=y+wpp.data[playername].p3.y, z=z+wpp.data[playername].p3.z})
+		send_player(playername, "Position 3 set to "..minetest.pos_to_string(wpp.data[playername].p3))
+	end,
+})
+
+minetest.register_chatcommand("p3p", {
+	params = "<none>",
+	description = "Sets position 3 to the next punched node",
+	privs = {worldedit = true},
+	func = function(playername, param)
+		init_player(playername)
+		if check_running(playername) then return end
+		
+		if wpp.data[playername].punch_3 then
+			wpp.data[playername].punch_3 = false
+			send_player(playername, "Position 3 will not be set to next punched node")
+		else
+			wpp.data[playername].punch_3 = true
+			send_player(playername, "Position 3 will be set to next punched node")
+		end
+	end,
+})
+
 minetest.register_on_punchnode(function(pos, node, puncher)
 	local playername = puncher:get_player_name()
 	if not wpp.data[playername] then
@@ -645,6 +726,11 @@ minetest.register_on_punchnode(function(pos, node, puncher)
 		set_p2(playername, pos)
 		wpp.data[playername].punch_2 = false
 		send_player(playername, "Position 2 set to "..minetest.pos_to_string(wpp.data[playername].p2))
+	end
+	if wpp.data[playername].punch_3 then
+		set_p3(playername, pos)
+		wpp.data[playername].punch_3 = false
+		send_player(playername, "Position 3 set to "..minetest.pos_to_string(wpp.data[playername].p3))
 	end
 end)
 

@@ -19,27 +19,19 @@ Currently supported commands are:
     - no parameters
     - prints information about positions, nodes and commands
       of the player
- - /p1
+ - /p#
     - optional parameter: <X>,<Y>,<Z>
-    - sets position 1 for the player to the player position or x,y,z if
+    - # is either 1, 2 or 2
+    - sets position # for the player to the player position or x,y,z if
       specified
- - /p2
-    - optional parameter: <X>,<Y>,<Z>
-    - sets position 2 for the player to the player position or x,y,z if
-      specified
- - /p1a
+ - /p#a
     - parameter: <X>,<Y>,<Z>
-    - adds given vector to position 1
- - /p2a
-    - parameter: <X>,<Y>,<Z>
-    - adds given vector to position 2
- - /p1p
+    - # is either 1, 2 or 2
+    - adds given vector to position #
+ - /p#p
     - no parameters
-    - sets position 1 to the next punched node by the player
-    - call it again if you don't want to change it anymore
- - /p2p
-    - no parameters
-    - sets position 2 to the next punched node by the player
+    - # is either 1, 2 or 2
+    - sets position # to the next punched node by the player
     - call it again if you don't want to change it anymore
  - /select
     - optional param: nodename
