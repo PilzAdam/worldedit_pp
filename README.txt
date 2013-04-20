@@ -80,10 +80,17 @@ Currently supported commands are:
    - parameter: "on" or "off"
    - select whether markers at position 1 & 2 should be shown or not
  - /load
-   - parameter: filename without ".we" or ".wem" extention
-   - loads the nodes and places them in the world with position 1 as origin
+   - parameter: filename (without ".we" or ".wem" extention)
+   - loads the nodes and places them in the world with position 1 as origin from
+     <worlddirectory>/schems/<filename>.we, also tries <filename>.wem
    - currently only the latest version of the schemes from Worldedit is
      supported
+ - /save
+   - parameter: filename (without ".we" extention)
+   - saves nodes in region specified by position 1 & 2 to
+     <worlddirectory>/schems/<filename>.we
+   - files can't be overwritten
+   - NOTE: Writing the file might cause lag
 
 License
 -------
