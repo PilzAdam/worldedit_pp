@@ -88,6 +88,9 @@ Currently supported commands are:
    - moves the nodes in region specified by position 1 & to position 3
    - position 3 equals position 1 in the old region
    - all nodes in the old region will be removed
+ - /copy
+   - no parameters
+   - same as /move but nodes in old region are not removed
 
 License
 -------

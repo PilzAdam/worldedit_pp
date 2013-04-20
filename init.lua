@@ -366,12 +366,16 @@ minetest.register_globalstep(function(dtime)
 			wpp.data[playername].status = ""
 			wpp.data[playername].p = nil
 			table.remove(wpp.run_player, 1)
-		elseif wpp.data[playername].action == "move_read" then
+		elseif wpp.data[playername].action == "move_read" or wpp.data[playername].action == "copy_read" then
 			local minp, maxp = minmaxp(wpp.data[playername].p1, wpp.data[playername].p2)
 			if wpp.data[playername].status ~= "running" then
 				local eta = (maxp.x-minp.x)*(maxp.y-minp.y)*(maxp.z-minp.z)/NODES_PER_STEP * wpp.dtime
 				eta = math.floor(eta)*2
-				send_player(playername, "Starting your command \"move\"; ETA: "..eta.." seconds (based on average server speed)")
+				if wpp.data[playername].action == "move_read" then
+					send_player(playername, "Starting your command \"move\"; ETA: "..eta.." seconds (based on average server speed)")
+				else
+					send_player(playername, "Starting your command \"copy\"; ETA: "..eta.." seconds (based on average server speed)")
+				end
 				wpp.data[playername].status = "running"
 			end
 			if not wpp.data[playername].p then
@@ -401,7 +405,9 @@ minetest.register_globalstep(function(dtime)
 					n.y = wpp.data[playername].p.y - wpp.data[playername].p1.y
 					n.z = wpp.data[playername].p.z - wpp.data[playername].p1.z
 					table.insert(wpp.data[playername].nodes, n)
-					minetest.env:remove_node(wpp.data[playername].p)
+					if wpp.data[playername].action == "move_read" then
+						minetest.env:remove_node(wpp.data[playername].p)
+					end
 					wpp.data[playername].count = wpp.data[playername].count + 1
 				end
 				
@@ -423,9 +429,13 @@ minetest.register_globalstep(function(dtime)
 					return
 				end
 			end
-			wpp.data[playername].action = "move_write"
+			if wpp.data[playername].action == "move_read" then
+				wpp.data[playername].action = "move_write"
+			else
+				wpp.data[playername].action = "copy_write"
+			end
 			wpp.data[playername].p = nil
-		elseif wpp.data[playername].action == "move_write" then
+		elseif wpp.data[playername].action == "move_write" or wpp.data[playername].action == "copy_write" then
 			local i = 0
 			while #wpp.data[playername].nodes > 0 do
 				local num = #wpp.data[playername].nodes
@@ -443,8 +453,13 @@ minetest.register_globalstep(function(dtime)
 					return
 				end
 			end
-			send_player(playername, "Command \"move\" finished")
-			send_player(playername, wpp.data[playername].count.." nodes moved")
+			if wpp.data[playername].action == "move_write" then
+				send_player(playername, "Command \"move\" finished")
+				send_player(playername, wpp.data[playername].count.." nodes moved")
+			else
+				send_player(playername, "Command \"copy\" finished")
+				send_player(playername, wpp.data[playername].count.." nodes copied")
+			end
 			wpp.data[playername].count = 0
 			wpp.data[playername].status = ""
 			wpp.data[playername].p = nil
@@ -1190,5 +1205,33 @@ minetest.register_chatcommand("move", {
 		wpp.data[playername].status = "waiting"
 		table.insert(wpp.run_player, playername)
 		send_player(playername, "Command \"move\" enqueued")
+	end,
+})
+
+minetest.register_chatcommand("copy", {
+	params = "<none>",
+	description = "Copies nodes to position 3",
+	privs = {worldedit = true},
+	func = function(playername, param)
+		init_player(playername)
+		if check_running(playername) then return end
+		
+		if not wpp.data[playername].p1 then
+			send_player(playername, "No position 1 set")
+			return
+		end
+		if not wpp.data[playername].p2 then
+			send_player(playername, "No position 2 set")
+			return
+		end
+		if not wpp.data[playername].p3 then
+			send_player(playername, "No position 3 set")
+			return
+		end
+		
+		wpp.data[playername].action = "copy_read"
+		wpp.data[playername].status = "waiting"
+		table.insert(wpp.run_player, playername)
+		send_player(playername, "Command \"copy\" enqueued")
 	end,
 })
