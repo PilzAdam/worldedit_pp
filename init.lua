@@ -1140,7 +1140,23 @@ minetest.register_chatcommand("load", {
 			send_player(playername, "File format not supported")
 			return
 		end
-		wpp.data[playername].nodes = minetest.deserialize(content)
+		--wpp.data[playername].nodes = minetest.deserialize(content)
+		
+		--HACK by Uberi
+		content = content:gsub("return%s*{", "", 1):gsub("}%s*$", "", 1)
+		local escaped = content:gsub("\\\\", "@@"):gsub("\\\"", "@@"):gsub("(\"[^\"]+\")", function(s) return string.rep("@", #s) end)
+		wpp.data[playername].nodes = {}
+		local startpos, startpos1, endpos = 1, 1
+		while true do
+			startpos, endpos = escaped:find("},%s*{", startpos)
+			if not startpos then
+				break
+			end
+			local current = content:sub(startpos1, startpos)
+			table.insert(wpp.data[playername].nodes, minetest.deserialize("return " .. current))
+			startpos, startpos1 = endpos, endpos
+		end
+		
 		file:close()
 		if not wpp.data[playername].nodes then
 			send_player(playername, "File corrupted (possibly too big)")
