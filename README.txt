@@ -94,5 +94,5 @@ Currently supported commands are:
 
 License
 -------
-Sourcecode: WTFPL
+Sourcecode: WTFPL (parts by Uberi: AGPL)
 Textures: WTFPL

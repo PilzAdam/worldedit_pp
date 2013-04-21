@@ -1143,6 +1143,7 @@ minetest.register_chatcommand("load", {
 		--wpp.data[playername].nodes = minetest.deserialize(content)
 		
 		--HACK by Uberi
+		-- License: AGPL 3.0
 		content = content:gsub("return%s*{", "", 1):gsub("}%s*$", "", 1)
 		local escaped = content:gsub("\\\\", "@@"):gsub("\\\"", "@@"):gsub("(\"[^\"]+\")", function(s) return string.rep("@", #s) end)
 		wpp.data[playername].nodes = {}
@@ -1156,6 +1157,7 @@ minetest.register_chatcommand("load", {
 			table.insert(wpp.data[playername].nodes, minetest.deserialize("return " .. current))
 			startpos, startpos1 = endpos, endpos
 		end
+		-- END HACK by Uberi
 		
 		file:close()
 		if not wpp.data[playername].nodes then
