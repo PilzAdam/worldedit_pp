@@ -33,8 +33,7 @@ local function minmaxp(p1, p2)
 end
 
 local function send_player(playername, text)
-	--minetest.chat_send_player(playername, "Wordledit++ -!- "..text, true) TODO
-	minetest.chat_send_player(playername, text)
+	minetest.chat_send_player(playername, "Wordledit++ -!- "..text, false)
 end
 
 minetest.register_globalstep(function(dtime)
